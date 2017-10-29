@@ -11,12 +11,22 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libssl-dev \
     unzip \
     zip \
-    sudo vim git-core curl htop\
+    sudo \
+    vim \
+    git-core \
+    curl \
+    htop \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libpng-dev \
     && rm /etc/cron.daily/* \
     && apt-get upgrade -y && apt-get autoremove -y --purge \
     && rm -rf /var/lib/apt/lists/*
 RUN docker-php-ext-configure imap --with-imap --with-imap-ssl --with-kerberos \
-    && docker-php-ext-install imap intl mbstring mcrypt mysqli pdo pdo_mysql zip
+    && docker-php-ext-install imap intl mbstring mcrypt mysqli pdo pdo_mysql zip \
+    && docker-php-ext-install -j$(nproc) iconv \
+    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd
 
 VOLUME /var/www/html
 
