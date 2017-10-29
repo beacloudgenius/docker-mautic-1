@@ -1,5 +1,5 @@
-FROM php:7.0-apache
-MAINTAINER Michael Babker <michael.babker@mautic.org> (@mbabker)
+FROM php:7.1.10-apache
+MAINTAINER Nilesh <nilesh@cloudgeni.us>
 
 # Install PHP extensions
 RUN apt-get update && apt-get install --no-install-recommends -y \
@@ -11,15 +11,25 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libssl-dev \
     unzip \
     zip \
-    && rm /etc/cron.daily/*
+    sudo vim git-core curl htop\
+    && rm /etc/cron.daily/* \
+    && apt-get upgrade -y && apt-get autoremove -y --purge \
+    && rm -rf /var/lib/apt/lists/*
 RUN docker-php-ext-configure imap --with-imap --with-imap-ssl --with-kerberos \
     && docker-php-ext-install imap intl mbstring mcrypt mysqli pdo pdo_mysql zip
 
 VOLUME /var/www/html
 
+ENV PHPREDIS_VERSION 3.1.4
+
+RUN mkdir -p /usr/src/php/ext/redis \
+    && curl -L https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz | tar xvz -C /usr/src/php/ext/redis --strip 1 \
+    && echo 'redis' >> /usr/src/php-available-exts \
+    && docker-php-ext-install redis
+
 # Define Mautic version and expected SHA1 signature
-ENV MAUTIC_VERSION 2.10.1
-ENV MAUTIC_SHA1 f952883a3399afa0613b0a86886656f53cd7d4f9
+ENV MAUTIC_VERSION 2.11.0
+ENV MAUTIC_SHA1 7d410f2bb09e06b06e52f0e98eef1ae51a5696d9
 
 ENV MAUTIC_RUN_CRON_JOBS true
 ENV MAUTIC_DB_USER root
